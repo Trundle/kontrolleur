@@ -1,5 +1,5 @@
 function kontrolleur_ctrl_r
-  if history | python kontrolleur.py | read -zl execute cursor match
+  if history | kontrolleur | read -zl execute cursor match
     commandline -rb $match
     commandline -f repaint
     commandline -C $cursor
