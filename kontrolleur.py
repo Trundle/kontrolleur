@@ -19,6 +19,10 @@ class Prompt:
     KEY_TRANSLATIONS = {
         "<SPACE>": " "
     }
+    CURSOR_OFFSETS = {
+        "<LEFT>": -1,
+        "<RIGHT>": 1,
+    }
 
     def __init__(self, window, input_generator, finder):
         self._window = window
@@ -32,6 +36,8 @@ class Prompt:
 
     def run(self):
         self.redraw()
+        execute = False
+        cursor_offset = 0
         for event in self._input:
             if event in {"<ESC>", "<Ctrl-g>"}:
                 self.current_match = None
@@ -43,10 +49,18 @@ class Prompt:
                 self._add_char(self.KEY_TRANSLATIONS.get(event, event))
             elif event == "<Ctrl-r>":
                 self._update_with_next_match()
+            elif event in {"<Ctrl-j>", "<Ctrl-m>"}:
+                execute = True
+                break
             else:
+                cursor_offset = self.CURSOR_OFFSETS.get(event, 0)
                 break
             self.redraw()
-        return self.current_match
+        if self.current_match:
+            cursor_pos = self.current_match.find(self._search_text) + cursor_offset
+        else:
+            cursor_pos = 0
+        return (self.current_match, execute, cursor_pos)
 
     def redraw(self):
         self._window.render_to_terminal(self._output, self._cursor_pos)
@@ -140,12 +154,18 @@ def main():
     entries = list(sys.stdin)
     finder = SearchStrategy(entries)
     with open("/dev/tty", "r") as tty_in, \
-         CursorAwareWindow(in_stream=tty_in, hide_cursor=False) as window, \
+         open("/dev/tty", "w") as tty_out, \
+         CursorAwareWindow(in_stream=tty_in, out_stream=tty_out, hide_cursor=False) as window, \
          Input(in_stream=tty_in) as input_generator:
         prompt = Prompt(window, input_generator, finder)
-        match = prompt.run()
+        try:
+            (match, execute, cursor_pos) = prompt.run()
+        except KeyboardInterrupt:
+            match = None
     if match is not None:
-        print(match)
+        print(execute)
+        print(cursor_pos)
+        print(match.rstrip("\n"), end="\0")
 
 
 if __name__ == "__main__":
