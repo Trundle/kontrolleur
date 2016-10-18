@@ -150,8 +150,32 @@ class SearchStrategy:
         self._iter = iter(self.history)
 
 
+def parse_entries(lines_iter):
+    lines = []
+    in_string = None
+    escaped = False
+    for line in lines_iter:
+        line = line.rstrip("\n")
+        lines.append(line)
+        for char in line:
+            if not escaped:
+                if char == in_string:
+                    in_string = None
+                elif not in_string and char in {"'", '"'}:
+                    in_string = char
+                elif char == "\\":
+                    escaped = True
+            else:
+                escaped = False
+        # N.B. check for "not escaped" because if the line ended in \,
+        # the escaped flag is set because the last char is the \
+        if line and (char != "\\" or not escaped) and not in_string:
+            yield "\n".join(lines)
+            lines = []
+
+
 def main():
-    entries = list(sys.stdin)
+    entries = list(parse_entries(sys.stdin))
     finder = SearchStrategy(entries)
     with open("/dev/tty", "r") as tty_in, \
          open("/dev/tty", "w") as tty_out, \
@@ -165,7 +189,7 @@ def main():
     if match is not None:
         print(execute)
         print(cursor_pos)
-        print(match.rstrip("\n"), end="\0")
+        print(match, end="\0")
 
 
 if __name__ == "__main__":
