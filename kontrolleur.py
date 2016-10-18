@@ -57,7 +57,7 @@ class Prompt:
                 break
             self.redraw()
         if self.current_match:
-            cursor_pos = self.current_match.find(self._search_text) + cursor_offset
+            cursor_pos = self._finder.index(self.current_match) + cursor_offset
         else:
             cursor_pos = 0
         return (self.current_match, execute, cursor_pos)
@@ -97,7 +97,7 @@ class Prompt:
             if len(lines) + 1 != self._output.shape[0]:
                 self._resize_output(len(lines) + 1)
             for (lineno, line) in enumerate(lines, 1):
-                line = self._highlight_match(line)
+                line = self._finder.highlight_match(line)
                 self._output[lineno, 0:] = [line.ljust(self._window.width)]
             color = lambda x: x
         else:
@@ -113,15 +113,6 @@ class Prompt:
         for (lineno, line) in enumerate(islice(old_output, number_of_rows)):
             self._output[lineno] = line
 
-    def _highlight_match(self, line):
-        start_index = line.find(self._search_text)
-        if start_index >= 0:
-            return (
-                line[:start_index]
-                + invert(magenta(self._search_text))
-                + line[start_index + len(self._search_text):])
-        return line
-
 
 def wrap_lines(lines, max_length):
     for line in lines:
@@ -134,17 +125,31 @@ def wrap_lines(lines, max_length):
 class SearchStrategy:
     def __init__(self, history, *, search_text=""):
         self.history = history
-        self.search_text = search_text
-        self._reset_iter()
+        self.reset_search_text(search_text)
 
     def next(self):
         for entry in self._iter:
-            if self.search_text in entry:
+            if self.search_text in entry.lower():
                 return entry
 
     def reset_search_text(self, new_search_text):
-        self.search_text = new_search_text
+        self.search_text = new_search_text.lower()
         self._reset_iter()
+
+    def index(self, match):
+        """Returns the start index of the current search text in `match`.
+        """
+        return match.lower().find(self.search_text)
+
+    def highlight_match(self, match):
+        start_index = match.lower().find(self.search_text)
+        if start_index >= 0:
+            end_index = start_index + len(self.search_text)
+            return (
+                match[:start_index]
+                + invert(magenta(match[start_index:end_index]))
+                + match[end_index:])
+        return match
 
     def _reset_iter(self):
         self._iter = iter(self.history)
