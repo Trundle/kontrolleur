@@ -1,4 +1,4 @@
-function kontrolleur_ctrl_r
+function _kontrolleur_ctrl_r
   if history | kontrolleur | read -zl execute cursor match
     commandline -rb $match
     commandline -f repaint
@@ -10,6 +10,3 @@ function kontrolleur_ctrl_r
     commandline -f repaint
   end
 end
-
-
-bind \cr kontrolleur_ctrl_r
