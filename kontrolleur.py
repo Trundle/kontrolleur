@@ -184,8 +184,11 @@ def main():
     finder = SearchStrategy(entries)
     with open("/dev/tty", "r") as tty_in, \
          open("/dev/tty", "w") as tty_out, \
-         CursorAwareWindow(in_stream=tty_in, out_stream=tty_out, hide_cursor=False) as window, \
-         Input(in_stream=tty_in) as input_generator:
+         Input(in_stream=tty_in) as input_generator, \
+         CursorAwareWindow(in_stream=tty_in,
+                           out_stream=tty_out,
+                           hide_cursor=False,
+                           extra_bytes_callback=input_generator.unget_bytes) as window:
         prompt = Prompt(window, input_generator, finder)
         try:
             (match, execute, cursor_pos) = prompt.run()
