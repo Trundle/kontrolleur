@@ -155,6 +155,24 @@ class SearchStrategy:
         self._iter = iter(self.history)
 
 
+class _ReusableIter:
+    """An iterable that yields all elements from the given iterable and also
+    memorizes them. Requesting a new iterator returns an iterator that yields
+    all elements again.
+
+    """
+    def __init__(self, iterable):
+        self._iter = iterable
+        self._entries = []
+
+    def __iter__(self):
+        for item in self._entries:
+            yield item
+        for item in self._iter:
+            self._entries.append(item)
+            yield item
+
+
 def parse_entries(lines_iter):
     lines = []
     in_string = None
@@ -180,7 +198,7 @@ def parse_entries(lines_iter):
 
 
 def main():
-    entries = list(parse_entries(sys.stdin))
+    entries = _ReusableIter(parse_entries(sys.stdin))
     finder = SearchStrategy(entries)
     with open("/dev/tty", "r") as tty_in, \
          open("/dev/tty", "w") as tty_out, \
