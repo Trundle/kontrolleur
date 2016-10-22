@@ -15,13 +15,21 @@ class Position:
         return attr.astuple(self)[key]
 
 
+def _identity(x):
+    return x
+
+
 class Prompt:
     KEY_TRANSLATIONS = {
         "<SPACE>": " "
     }
     CURSOR_OFFSETS = {
-        "<LEFT>": -1,
-        "<RIGHT>": 1,
+        "<LEFT>": lambda offset: offset - 1,
+        "<RIGHT>": lambda offset: offset + 1,
+        "<HOME>": lambda _: 0,
+        # Simply a large enough number. fish then makes sure the cursor is
+        # placed at the end
+        "<END>": lambda _: 2 ** 16,
     }
 
     def __init__(self, window, input_generator, finder):
@@ -37,7 +45,7 @@ class Prompt:
     def run(self):
         self.redraw()
         execute = False
-        cursor_offset = 0
+        cursor_offset_modifier = _identity
         for event in self._input:
             if event in {"<ESC>", "<Ctrl-g>"}:
                 self.current_match = None
@@ -53,11 +61,11 @@ class Prompt:
                 execute = True
                 break
             else:
-                cursor_offset = self.CURSOR_OFFSETS.get(event, 0)
+                cursor_offset_modifier = self.CURSOR_OFFSETS.get(event, _identity)
                 break
             self.redraw()
         if self.current_match:
-            cursor_pos = self._finder.index(self.current_match) + cursor_offset
+            cursor_pos = cursor_offset_modifier(self._finder.index(self.current_match))
         else:
             cursor_pos = 0
         return (self.current_match, execute, cursor_pos)
