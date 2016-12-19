@@ -4,6 +4,9 @@
 .. image:: https://img.shields.io/github/license/Trundle/kontrolleur.svg
    :target: https://www.tldrlegal.com/l/mit
 
+.. image:: https://travis-ci.org/Trundle/kontrolleur.svg?branch=master
+   :target: https://travis-ci.org/Trundle/kontrolleur
+
 ===========
 Kontrolleur
 ===========
