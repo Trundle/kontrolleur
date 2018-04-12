@@ -183,26 +183,13 @@ class _ReusableIter:
 
 def parse_entries(lines_iter):
     lines = []
-    in_string = None
-    escaped = False
     for line in lines_iter:
-        line = line.rstrip("\n")
-        lines.append(line)
-        for char in line:
-            if not escaped:
-                if char == in_string:
-                    in_string = None
-                elif not in_string and char in {"'", '"'}:
-                    in_string = char
-                elif char == "\\":
-                    escaped = True
-            else:
-                escaped = False
-        # N.B. check for "not escaped" because if the line ended in \,
-        # the escaped flag is set because the last char is the \
-        if line and (char != "\\" or not escaped) and not in_string:
-            yield "\n".join(lines)
-            lines = []
+        while line:
+            (command_part, sep, line) = line.partition("\x00")
+            lines.append(command_part)
+            if sep == "\x00":
+                yield "".join(lines)
+                lines = []
 
 
 def main():

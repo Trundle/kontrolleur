@@ -1,5 +1,5 @@
 function _kontrolleur_ctrl_r
-  if history | kontrolleur | read -zl execute cursor match
+  if history -z | kontrolleur | read -zl execute cursor match
     commandline -rb $match
     commandline -f repaint
     commandline -C $cursor
