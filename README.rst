@@ -30,10 +30,10 @@ For installing the ``kontrolleur`` executable, you can use pip::
 
 This will install kontrolleur to ``~/.local/bin/``.
 
-For integration with the fish-shell, you can use `fisherman
-<http://fisherman.sh/>`_::
+For integration with the fish-shell, you can use `fisher
+<https://github.com/jorgebucaran/fisher>`_::
 
-  fisher Trundle/kontrolleur
+  fisher add Trundle/kontrolleur
 
 Note that this expects the ``kontrolleur`` executable in ``$PATH``.
 
